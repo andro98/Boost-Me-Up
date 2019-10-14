@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour
@@ -30,6 +31,8 @@ public class Rocket : MonoBehaviour
     enum State { Alive, Dying, Transcending }
     State state = State.Alive;
 
+    bool collisionsDisabled = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -46,6 +49,22 @@ public class Rocket : MonoBehaviour
         {
             ProcessInput();
         }
+        if (Debug.isDebugBuild)
+        {
+            RespondToDebugKeys();
+        }
+    }
+
+    private void RespondToDebugKeys()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextScene();
+        }
+        else if (Input.GetKeyDown(KeyCode.C))
+        {
+            collisionsDisabled = !collisionsDisabled;
+        }
     }
 
     private void ProcessInput()
@@ -56,7 +75,7 @@ public class Rocket : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Alive) { return; } // ignore collisions when dead
+        if (state != State.Alive || collisionsDisabled) { return; } // ignore collisions when dead
         switch (collision.gameObject.tag)
         {
             case "Friendly":
@@ -92,8 +111,9 @@ public class Rocket : MonoBehaviour
 
     private void LoadNextScene()
     {
-        //TODO allow for more than 2 levels
-        SceneManager.LoadScene(1);
+        int currentLevelIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = (currentLevelIndex + 1 == SceneManager.sceneCountInBuildSettings) ? 0 : currentLevelIndex + 1;
+        SceneManager.LoadScene(nextSceneIndex);
     }
 
     private void LoadFirstLevel()
